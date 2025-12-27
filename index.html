@@ -22,8 +22,12 @@
       border:1px solid #2a2a3a;
     }
 
-    h1 { margin-top:0; letter-spacing:1px; }
-    .row { margin:12px 0 6px; font-weight:600; }
+    h1 { margin:0 0 12px 0; letter-spacing:1px; }
+
+    .row { margin:12px 0 6px; }
+    .label { margin-bottom: 6px; font-weight: 700; }
+
+    input[type="range"] { width: 100%; margin: 6px 0 10px; }
 
     .bar {
       height:10px;
@@ -36,11 +40,13 @@
     .fill {
       height:100%;
       background:#ff3b3b;
+      width: 0%;
+      transition: width 0.15s ease;
     }
 
     /* XP */
     .xp-section { margin-top: 16px; }
-    .level-text { font-weight: bold; margin-bottom: 6px; }
+    .level-text { font-weight: 800; margin-bottom: 6px; }
 
     .xp-bar {
       width: 100%;
@@ -64,15 +70,17 @@
       margin-bottom: 10px;
     }
 
+    .btn-row { display:flex; gap:10px; }
+
     button {
       background:#23233a;
       color:#eaeaf0;
       border:1px solid #2a2a3a;
       padding:10px 12px;
       border-radius:10px;
-      font-weight:700;
+      font-weight:800;
       cursor:pointer;
-      width:100%;
+      flex: 1;
     }
 
     button:active { transform: scale(0.99); }
@@ -83,16 +91,24 @@
   <div class="card">
     <h1>PLAYER HUD</h1>
 
-    <div class="row">Strength</div>
-    <div class="bar"><div class="fill" style="width:55%"></div></div>
+    <div class="row">
+      <div class="label">Strength: <span id="strengthVal">55</span>/100</div>
+      <input type="range" id="strength" min="0" max="100" value="55" />
+      <div class="bar"><div class="fill" id="strengthFill"></div></div>
+    </div>
 
-    <div class="row">Stress</div>
-    <div class="bar"><div class="fill" style="width:88%"></div></div>
+    <div class="row">
+      <div class="label">Stress: <span id="stressVal">88</span>/100</div>
+      <input type="range" id="stress" min="0" max="100" value="88" />
+      <div class="bar"><div class="fill" id="stressFill"></div></div>
+    </div>
 
-    <div class="row">Hydration</div>
-    <div class="bar"><div class="fill" style="width:20%"></div></div>
+    <div class="row">
+      <div class="label">Hydration: <span id="hydrationVal">20</span>/100</div>
+      <input type="range" id="hydration" min="0" max="100" value="20" />
+      <div class="bar"><div class="fill" id="hydrationFill"></div></div>
+    </div>
 
-    <!-- XP is its own section now -->
     <div class="xp-section">
       <div class="level-text">LEVEL <span id="level">1</span></div>
 
@@ -104,33 +120,122 @@
         <span id="xp">0</span> / <span id="xpMax">100</span> XP
       </div>
 
-      <button onclick="gainXP(10)">+10 XP</button>
+      <div class="btn-row">
+        <button onclick="gainXP(10)">+10 XP</button>
+        <button onclick="resetAll()">Reset</button>
+      </div>
     </div>
   </div>
 
   <script>
-    let xp = 0;
-    let level = 1;
-    let xpMax = 100;
+    const STORAGE_KEY = "playerStatBoard_v1";
+
+    // Default state (only used if no save exists)
+    let state = {
+      level: 1,
+      xp: 0,
+      xpMax: 100,
+      stats: {
+        strength: 55,
+        stress: 88,
+        hydration: 20
+      }
+    };
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function loadState() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          state = JSON.parse(saved);
+        } catch (e) {
+          localStorage.removeItem(STORAGE_KEY);
+        }
+      }
+    }
+
+    function clamp(n, min, max) {
+      return Math.min(Math.max(n, min), max);
+    }
+
+    function setStat(statName, value) {
+      state.stats[statName] = clamp(Number(value), 0, 100);
+      render();
+      saveState();
+    }
 
     function gainXP(amount) {
-      xp += amount;
+      state.xp += amount;
 
-      while (xp >= xpMax) {
-        xp -= xpMax;
-        level++;
-        xpMax = Math.floor(xpMax * 1.25);
+      while (state.xp >= state.xpMax) {
+        state.xp -= state.xpMax;
+        state.level++;
+        state.xpMax = Math.floor(state.xpMax * 1.25);
       }
 
-      document.getElementById("xp").innerText = xp;
-      document.getElementById("level").innerText = level;
-      document.getElementById("xpMax").innerText = xpMax;
-
-      document.getElementById("xpFill").style.width = (xp / xpMax) * 100 + "%";
+      render();
+      saveState();
     }
+
+    function resetAll() {
+      localStorage.removeItem(STORAGE_KEY);
+      state = {
+        level: 1,
+        xp: 0,
+        xpMax: 100,
+        stats: { strength: 55, stress: 88, hydration: 20 }
+      };
+      render();
+      saveState();
+    }
+
+    function renderBars() {
+      const { strength, stress, hydration } = state.stats;
+
+      document.getElementById("strengthVal").innerText = strength;
+      document.getElementById("stressVal").innerText = stress;
+      document.getElementById("hydrationVal").innerText = hydration;
+
+      document.getElementById("strength").value = strength;
+      document.getElementById("stress").value = stress;
+      document.getElementById("hydration").value = hydration;
+
+      document.getElementById("strengthFill").style.width = strength + "%";
+      document.getElementById("stressFill").style.width = stress + "%";
+      document.getElementById("hydrationFill").style.width = hydration + "%";
+    }
+
+    function renderXP() {
+      document.getElementById("level").innerText = state.level;
+      document.getElementById("xp").innerText = state.xp;
+      document.getElementById("xpMax").innerText = state.xpMax;
+
+      const pct = (state.xp / state.xpMax) * 100;
+      document.getElementById("xpFill").style.width = pct + "%";
+    }
+
+    function render() {
+      renderBars();
+      renderXP();
+    }
+
+    function wireEvents() {
+      document.getElementById("strength").addEventListener("input", (e) => setStat("strength", e.target.value));
+      document.getElementById("stress").addEventListener("input", (e) => setStat("stress", e.target.value));
+      document.getElementById("hydration").addEventListener("input", (e) => setStat("hydration", e.target.value));
+    }
+
+    // Boot
+    loadState();
+    window.addEventListener("DOMContentLoaded", () => {
+      wireEvents();
+      render();
+      saveState();
+    });
   </script>
 </body>
 </html>
 
-</body>
-</html>
