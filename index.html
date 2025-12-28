@@ -1,272 +1,414 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Player Stat Board</title>
 
   <style>
-    .character {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 16px;
-}
+    :root{
+      --bg:#0b0b12;
+      --panel:#151522;
+      --panel2:#10101a;
+      --border:#2a2a3a;
+      --text:#eaeaf0;
+      --muted:#b7b7c8;
 
-.character img {
-  width: 96px;
-  height: auto;
-  image-rendering: pixelated;
-}
-    body {
-      background:#0b0b12;
-      color:#eaeaf0;
-      font-family: system-ui;
-      padding:20px;
-    }
-.hud-top{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:12px;
-  margin: 8px 0 14px;
-}
+      --bar-bg:#242436;
+      --bar-outline:#3a3a55;
 
-.avatar-wrap{
-  display:flex;
-  align-items:center;
-  gap:12px;
-}
-
-.avatar{
-  width:72px;
-  height:72px;
-  border-radius:14px;
-  border:1px solid #2a2a3a;
-  background:
-    linear-gradient(135deg, #2a2a3a, #151522);
-  image-rendering: pixelated;
-
-  /* motion */
-  animation: idleBob 1.6s ease-in-out infinite;
-  position: relative;
-}
-
-@keyframes idleBob{
-  0%,100% { transform: translateY(0px); }
-  50%     { transform: translateY(-4px); }
-}
-
-/* little “breathing” glow */
-.avatar::after{
-  content:"";
-  position:absolute;
-  inset:-2px;
-  border-radius:16px;
-  border:1px solid rgba(0,255,204,0.25);
-  filter: blur(2px);
-  opacity:0.4;
-  animation: pulse 2.2s ease-in-out infinite;
-  pointer-events:none;
-}
-@keyframes pulse{
-  0%,100%{ opacity:0.2; }
-  50%{ opacity:0.55; }
-}
-
-.nameplate .player-name{
-  font-weight:900;
-  letter-spacing:0.5px;
-}
-.nameplate .player-class{
-  font-size:12px;
-  opacity:0.8;
-  margin-top:2px;
-}
-
-.quick-stats{
-  text-align:right;
-  font-weight:800;
-}
-.quick-stats .qs{
-  font-size:12px;
-  opacity:0.9;
-  margin-bottom:4px;
-}
-    .card {
-      max-width:420px;
-      margin:auto;
-      background:#151522;
-      border-radius:16px;
-      padding:16px;
-      border:1px solid #2a2a3a;
+      --strength:#ff9f2f;
+      --stress:#ff3b3b;
+      --hydration:#3aa0ff;
+      --xp:#00ffcc;
     }
 
-    h1 { margin:0 0 12px 0; letter-spacing:1px; }
+    * { box-sizing: border-box; }
 
-    .row { margin:12px 0 6px; }
-    .label { margin-bottom: 6px; font-weight: 700; }
+    body{
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      padding: 20px;
+      margin: 0;
+      min-height: 100vh;
+    }
 
-    input[type="range"] { width: 100%; margin: 6px 0 10px; }
+    /* Optional: pixel background image if you add assets/bg.png */
+    body.has-bg{
+      background-image: url("./assets/bg.png");
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+    }
 
-    .bar {
-      height:10px;
-      background:#2a2a3a;
-      border-radius:999px;
+    .card{
+      max-width: 560px;
+      margin: 0 auto;
+      background: rgba(21,21,34,0.92);
+      border-radius: 18px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      backdrop-filter: blur(6px);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.35);
+    }
+
+    .top{
+      display:flex;
+      gap:14px;
+      align-items:center;
+      margin-bottom: 12px;
+    }
+
+    .sprite-wrap{
+      width: 118px;
+      height: 150px;
+      background: #0f0f18;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
       overflow:hidden;
-      margin-bottom:12px;
+      position: relative;
     }
 
-    .fill {
-      height:100%;
-      background:#ff3b3b;
-      width: 0%;
-      transition: width 0.15s ease;
+    .sprite-wrap::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      box-shadow: inset 0 0 0 2px rgba(0,0,0,0.25);
+      pointer-events:none;
     }
 
-    /* XP */
-    .xp-section { margin-top: 16px; }
-    .level-text { font-weight: 800; margin-bottom: 6px; }
-
-    .xp-bar {
-      width: 100%;
-      height: 14px;
-      background: #2a2a2a;
-      border-radius: 8px;
-      overflow: hidden;
-      margin: 6px 0;
+    .sprite{
+      width: 104px;
+      height: auto;
+      image-rendering: pixelated;
+      animation: idleBob 1.2s ease-in-out infinite;
+      user-select: none;
+      -webkit-user-drag: none;
     }
 
-    .xp-fill {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, #00ffcc, #00aa88);
-      transition: width 0.3s ease;
+    @keyframes idleBob{
+      0%,100%{ transform: translateY(0); }
+      50%{ transform: translateY(-3px); }
     }
 
-    .xp-numbers {
-      font-size: 14px;
-      opacity: 0.9;
-      margin-bottom: 10px;
-    }
-
-    .btn-row { display:flex; gap:10px; }
-
-    button {
-      background:#23233a;
-      color:#eaeaf0;
-      border:1px solid #2a2a3a;
-      padding:10px 12px;
-      border-radius:10px;
-      font-weight:800;
-      cursor:pointer;
+    .meta{
       flex: 1;
+      min-width: 0;
     }
 
-    button:active { transform: scale(0.99); }
+    .title{
+      font-weight: 900;
+      letter-spacing: 1px;
+      font-size: 22px;
+      line-height: 1.1;
+      margin-bottom: 6px;
+    }
+
+    .sub{
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .pillrow{
+      display:flex;
+      gap:8px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .pill{
+      background: rgba(16,16,26,0.9);
+      border: 1px solid var(--border);
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 12px;
+      color: var(--text);
+    }
+
+    .section{
+      margin-top: 12px;
+      padding: 12px;
+      background: rgba(16,16,26,0.9);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+
+    .stat-row{
+      margin: 10px 0 14px;
+    }
+
+    .label{
+      display:flex;
+      justify-content:space-between;
+      align-items: baseline;
+      gap: 10px;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .label small{
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 12px;
+    }
+
+    .pixelbar{
+      height: 16px;
+      background: var(--bar-bg);
+      border: 2px solid var(--bar-outline);
+      border-radius: 7px;
+      overflow:hidden;
+      box-shadow: inset 0 0 0 2px rgba(0,0,0,0.35);
+    }
+
+    .pixelfill{
+      height:100%;
+      width: 0%;
+      /* chunky pixel blocks overlay */
+      background-image:
+        repeating-linear-gradient(
+          90deg,
+          rgba(255,255,255,0.18) 0px,
+          rgba(255,255,255,0.18) 6px,
+          rgba(255,255,255,0.00) 6px,
+          rgba(255,255,255,0.00) 10px
+        );
+      background-blend-mode: overlay;
+      transition: width 120ms linear;
+    }
+
+    .pixelfill.strength{ background-color: var(--strength); }
+    .pixelfill.stress{ background-color: var(--stress); }
+    .pixelfill.hydration{ background-color: var(--hydration); }
+    .pixelfill.xp{ background-color: var(--xp); }
+
+    input[type="range"]{
+      width: 100%;
+      margin-top: 8px;
+    }
+
+    .btnrow{
+      display:flex;
+      gap:10px;
+      margin-top: 10px;
+    }
+
+    button{
+      flex:1;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #202038;
+      color: var(--text);
+      font-weight: 900;
+      letter-spacing: .2px;
+      cursor: pointer;
+      user-select:none;
+      touch-action: manipulation;
+    }
+
+    button.secondary{
+      background: #16162a;
+    }
+
+    button:active{
+      transform: scale(0.99);
+    }
+
+    .inventory-grid{
+      display:grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .slot{
+      height: 54px;
+      border: 2px solid var(--bar-outline);
+      border-radius: 10px;
+      background: #121222;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color: var(--muted);
+      font-weight: 900;
+      user-select:none;
+      overflow:hidden;
+      padding: 6px;
+      text-align:center;
+      line-height: 1.05;
+    }
+
+    .slot.filled{
+      background: #1a2a1a;
+      color: #d7ffd7;
+      border-color: #3a5a3a;
+    }
+
+    .hint{
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 8px;
+      line-height: 1.3;
+    }
+
+    .footer-controls{
+      display:flex;
+      gap:10px;
+      margin-top: 12px;
+    }
+
+    .tiny{
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 10px;
+    }
+
+    a { color: var(--xp); }
   </style>
 </head>
 
 <body>
   <div class="card">
-    <div class="character">
-  <img src="character.png" alt="Player Character">
-</div>
-    <h1>PLAYER HUD</h1>
-<div class="hud-top">
-  <div class="avatar-wrap">
-    <!-- Placeholder until you upload a selfie -->
-   <img class="avatar" src="avatar.png" alt="Pixel avatar">
-    <div class="nameplate">
-      <div class="player-name">Kay</div>
-      <div class="player-class">Class: Night-Owl Tank</div>
-    </div>
-  </div>
-
-  <div class="quick-stats">
-    <div class="qs">LV <span id="level">1</span></div>
-    <div class="qs">XP <span id="xp">0</span>/<span id="xpMax">100</span></div>
-  </div>
-</div>
-    <div class="row">
-      <div class="label">Strength: <span id="strengthVal">55</span>/100</div>
-      <input type="range" id="strength" min="0" max="100" value="55" />
-      <div class="bar"><div class="fill" id="strengthFill"></div></div>
-    </div>
-
-    <div class="row">
-      <div class="label">Stress: <span id="stressVal">88</span>/100</div>
-      <input type="range" id="stress" min="0" max="100" value="88" />
-      <div class="bar"><div class="fill" id="stressFill"></div></div>
-    </div>
-
-    <div class="row">
-      <div class="label">Hydration: <span id="hydrationVal">20</span>/100</div>
-      <input type="range" id="hydration" min="0" max="100" value="20" />
-      <div class="bar"><div class="fill" id="hydrationFill"></div></div>
-    </div>
-
-    <div class="xp-section">
-      <div class="level-text">LEVEL <span id="level">1</span></div>
-
-      <div class="xp-bar">
-        <div class="xp-fill" id="xpFill"></div>
+    <div class="top">
+      <div class="sprite-wrap">
+        <!-- Put your full-body sprite here: /assets/character.png -->
+        <img class="sprite" id="spriteImg" src="./assets/character.png" alt="Player Sprite"
+             onerror="this.style.display='none'; document.getElementById('spriteFallback').style.display='flex';">
+        <div id="spriteFallback" style="display:none; align-items:center; justify-content:center; height:100%; width:100%; color:var(--muted); font-weight:900; padding:10px; text-align:center;">
+          Add <span style="color:var(--text); margin:0 4px;">assets/character.png</span> to show your sprite
+        </div>
       </div>
 
-      <div class="xp-numbers">
-        <span id="xp">0</span> / <span id="xpMax">100</span> XP
+      <div class="meta">
+        <div class="title">PLAYER HUD</div>
+        <div class="sub">
+          Level <b><span id="level">1</span></b> •
+          XP <b><span id="xp">0</span></b>/<b><span id="xpMax">100</span></b>
+        </div>
+
+        <div class="pillrow">
+          <div class="pill">Save: <span id="saveStatus">Ready</span></div>
+          <div class="pill">Inventory: <span id="invCountTop">0</span>/12</div>
+        </div>
+
+        <div class="tiny">
+          Tip: If your sprite doesn’t show on Netlify, check filename CAPS and folder path.
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="stat-row">
+        <div class="label">Strength <small><span id="strengthVal">55</span>/100</small></div>
+        <div class="pixelbar"><div class="pixelfill strength" id="strengthFill"></div></div>
+        <input type="range" id="strength" min="0" max="100" value="55" />
       </div>
 
-      <div class="btn-row">
-        <button onclick="gainXP(10)">+10 XP</button>
-        <button onclick="resetAll()">Reset</button>
+      <div class="stat-row">
+        <div class="label">Stress <small><span id="stressVal">88</span>/100</small></div>
+        <div class="pixelbar"><div class="pixelfill stress" id="stressFill"></div></div>
+        <input type="range" id="stress" min="0" max="100" value="88" />
+      </div>
+
+      <div class="stat-row">
+        <div class="label">Hydration <small><span id="hydrationVal">20</span>/100</small></div>
+        <div class="pixelbar"><div class="pixelfill hydration" id="hydrationFill"></div></div>
+        <input type="range" id="hydration" min="0" max="100" value="20" />
+      </div>
+
+      <div class="stat-row" style="margin-bottom:0;">
+        <div class="label">XP <small><span id="xp">0</span>/<span id="xpMax">100</span></small></div>
+        <div class="pixelbar"><div class="pixelfill xp" id="xpFill"></div></div>
+
+        <div class="btnrow">
+          <button onclick="gainXP(10)">+10 XP</button>
+          <button class="secondary" onclick="toggleInventory()">Inventory</button>
+        </div>
+
+        <div class="btnrow">
+          <button class="secondary" onclick="toggleBackground()">Toggle BG</button>
+          <button class="secondary" onclick="resetAll()">Reset All</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section" id="inventoryPanel" style="display:none;">
+      <div class="label">Inventory <small><span id="invCount">0</span>/12</small></div>
+
+      <div class="inventory-grid" id="invGrid"></div>
+
+      <div class="btnrow">
+        <button onclick="addItem()">+ Item</button>
+        <button class="secondary" onclick="clearInv()">Clear</button>
+      </div>
+
+      <div class="hint">
+        Tap a filled slot to remove it. Tap an empty slot (+) to add.
       </div>
     </div>
   </div>
 
   <script>
-    const STORAGE_KEY = "playerStatBoard_v1";
+    // ---------- Storage ----------
+    const STORAGE_KEY = "playerStatBoard_v2";
+    const BG_KEY = "playerStatBoard_bg";
 
-    // Default state (only used if no save exists)
+    // Default state (used only if no save exists)
     let state = {
       level: 1,
       xp: 0,
       xpMax: 100,
-      stats: {
-        strength: 55,
-        stress: 88,
-        hydration: 20
-      }
+      stats: { strength: 55, stress: 88, hydration: 20 },
+      inventory: [] // array of strings
     };
 
-    function saveState() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    function setSaveStatus(text){
+      const el = document.getElementById("saveStatus");
+      if(!el) return;
+      el.textContent = text;
+      clearTimeout(setSaveStatus._t);
+      setSaveStatus._t = setTimeout(()=> el.textContent = "Saved", 450);
     }
 
-    function loadState() {
+    function saveState(){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      setSaveStatus("Saving...");
+    }
+
+    function loadState(){
       const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        try {
+      if(saved){
+        try{
           state = JSON.parse(saved);
-        } catch (e) {
+        } catch(e){
           localStorage.removeItem(STORAGE_KEY);
         }
       }
     }
 
-    function clamp(n, min, max) {
+    function clamp(n, min, max){
       return Math.min(Math.max(n, min), max);
     }
 
-    function setStat(statName, value) {
+    // ---------- Stats ----------
+    function setStat(statName, value){
       state.stats[statName] = clamp(Number(value), 0, 100);
       render();
       saveState();
     }
 
-    function gainXP(amount) {
+    // ---------- XP ----------
+    function gainXP(amount){
       state.xp += amount;
 
-      while (state.xp >= state.xpMax) {
+      while(state.xp >= state.xpMax){
         state.xp -= state.xpMax;
         state.level++;
         state.xpMax = Math.floor(state.xpMax * 1.25);
@@ -276,62 +418,131 @@
       saveState();
     }
 
-    function resetAll() {
-      localStorage.removeItem(STORAGE_KEY);
-      state = {
-        level: 1,
-        xp: 0,
-        xpMax: 100,
-        stats: { strength: 55, stress: 88, hydration: 20 }
-      };
+    // ---------- Inventory ----------
+    function toggleInventory(){
+      const p = document.getElementById("inventoryPanel");
+      p.style.display = (p.style.display === "none") ? "block" : "none";
+    }
+
+    function renderInventory(){
+      const grid = document.getElementById("invGrid");
+      grid.innerHTML = "";
+      const slots = 12;
+
+      for(let i=0; i<slots; i++){
+        const slot = document.createElement("div");
+        slot.className = "slot";
+
+        if(state.inventory[i]){
+          slot.classList.add("filled");
+          slot.textContent = state.inventory[i];
+          slot.onclick = () => {
+            state.inventory.splice(i, 1);
+            render();
+            saveState();
+          };
+        }else{
+          slot.textContent = "+";
+          slot.onclick = () => addItem();
+        }
+
+        grid.appendChild(slot);
+      }
+
+      document.getElementById("invCount").innerText = state.inventory.length;
+      document.getElementById("invCountTop").innerText = state.inventory.length;
+    }
+
+    function addItem(){
+      if(state.inventory.length >= 12) return;
+
+      const name = prompt("Item name? (ex: Potion, Key, Snack)");
+      if(!name) return;
+
+      state.inventory.push(name.trim().slice(0, 10));
       render();
       saveState();
     }
 
-    function renderBars() {
+    function clearInv(){
+      state.inventory = [];
+      render();
+      saveState();
+    }
+
+    // ---------- Background toggle ----------
+    function applyBackground(){
+      const enabled = localStorage.getItem(BG_KEY) === "1";
+      document.body.classList.toggle("has-bg", enabled);
+    }
+
+    function toggleBackground(){
+      const enabled = localStorage.getItem(BG_KEY) === "1";
+      localStorage.setItem(BG_KEY, enabled ? "0" : "1");
+      applyBackground();
+    }
+
+    // ---------- Render ----------
+    function render(){
       const { strength, stress, hydration } = state.stats;
 
+      // numbers
       document.getElementById("strengthVal").innerText = strength;
       document.getElementById("stressVal").innerText = stress;
       document.getElementById("hydrationVal").innerText = hydration;
 
+      // sliders
       document.getElementById("strength").value = strength;
       document.getElementById("stress").value = stress;
       document.getElementById("hydration").value = hydration;
 
+      // fills
       document.getElementById("strengthFill").style.width = strength + "%";
       document.getElementById("stressFill").style.width = stress + "%";
       document.getElementById("hydrationFill").style.width = hydration + "%";
-    }
 
-    function renderXP() {
+      // XP
       document.getElementById("level").innerText = state.level;
-      document.getElementById("xp").innerText = state.xp;
-      document.getElementById("xpMax").innerText = state.xpMax;
+      // xp appears twice (top + xp row); update both IDs safely
+      document.querySelectorAll("#xp").forEach(el => el.innerText = state.xp);
+      document.querySelectorAll("#xpMax").forEach(el => el.innerText = state.xpMax);
 
       const pct = (state.xp / state.xpMax) * 100;
       document.getElementById("xpFill").style.width = pct + "%";
+
+      // inventory
+      renderInventory();
     }
 
-    function render() {
-      renderBars();
-      renderXP();
-    }
-
-    function wireEvents() {
+    function wireEvents(){
       document.getElementById("strength").addEventListener("input", (e) => setStat("strength", e.target.value));
       document.getElementById("stress").addEventListener("input", (e) => setStat("stress", e.target.value));
       document.getElementById("hydration").addEventListener("input", (e) => setStat("hydration", e.target.value));
     }
 
-    // Boot
-    loadState();
-    window.addEventListener("DOMContentLoaded", () => {
-      wireEvents();
+    function resetAll(){
+      if(!confirm("Reset EVERYTHING? (stats, XP, inventory)")) return;
+      localStorage.removeItem(STORAGE_KEY);
+      state = {
+        level: 1,
+        xp: 0,
+        xpMax: 100,
+        stats: { strength: 55, stress: 88, hydration: 20 },
+        inventory: []
+      };
       render();
       saveState();
+    }
+
+    // ---------- Boot ----------
+    loadState();
+    window.addEventListener("DOMContentLoaded", () => {
+      applyBackground();
+      wireEvents();
+      render();
+      saveState(); // ensure storage exists after first load
+      setSaveStatus("Saved");
     });
   </script>
 </body>
 </html>
-
