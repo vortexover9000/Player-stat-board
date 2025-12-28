@@ -12,7 +12,75 @@
       font-family: system-ui;
       padding:20px;
     }
+.hud-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  margin: 8px 0 14px;
+}
 
+.avatar-wrap{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.avatar{
+  width:72px;
+  height:72px;
+  border-radius:14px;
+  border:1px solid #2a2a3a;
+  background:
+    linear-gradient(135deg, #2a2a3a, #151522);
+  image-rendering: pixelated;
+
+  /* motion */
+  animation: idleBob 1.6s ease-in-out infinite;
+  position: relative;
+}
+
+@keyframes idleBob{
+  0%,100% { transform: translateY(0px); }
+  50%     { transform: translateY(-4px); }
+}
+
+/* little “breathing” glow */
+.avatar::after{
+  content:"";
+  position:absolute;
+  inset:-2px;
+  border-radius:16px;
+  border:1px solid rgba(0,255,204,0.25);
+  filter: blur(2px);
+  opacity:0.4;
+  animation: pulse 2.2s ease-in-out infinite;
+  pointer-events:none;
+}
+@keyframes pulse{
+  0%,100%{ opacity:0.2; }
+  50%{ opacity:0.55; }
+}
+
+.nameplate .player-name{
+  font-weight:900;
+  letter-spacing:0.5px;
+}
+.nameplate .player-class{
+  font-size:12px;
+  opacity:0.8;
+  margin-top:2px;
+}
+
+.quick-stats{
+  text-align:right;
+  font-weight:800;
+}
+.quick-stats .qs{
+  font-size:12px;
+  opacity:0.9;
+  margin-bottom:4px;
+}
     .card {
       max-width:420px;
       margin:auto;
@@ -90,7 +158,21 @@
 <body>
   <div class="card">
     <h1>PLAYER HUD</h1>
+<div class="hud-top">
+  <div class="avatar-wrap">
+    <!-- Placeholder until you upload a selfie -->
+   <img class="avatar" src="avatar.png" alt="Pixel avatar">
+    <div class="nameplate">
+      <div class="player-name">Kay</div>
+      <div class="player-class">Class: Night-Owl Tank</div>
+    </div>
+  </div>
 
+  <div class="quick-stats">
+    <div class="qs">LV <span id="level">1</span></div>
+    <div class="qs">XP <span id="xp">0</span>/<span id="xpMax">100</span></div>
+  </div>
+</div>
     <div class="row">
       <div class="label">Strength: <span id="strengthVal">55</span>/100</div>
       <input type="range" id="strength" min="0" max="100" value="55" />
